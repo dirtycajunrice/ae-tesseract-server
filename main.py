@@ -7,8 +7,8 @@ if __name__ == "__main__":
     # webserver.Run()
 
     decoder = Decoder()
-    # wartype, time, location, army, standby = decoder.Decode('images\\invasion_roster_example.png')
-    wartype, time, location, army, standby = decoder.Decode('images\\war_roster_example.png')
+    # wartype, time, location, army, standby, page = decoder.Decode('images\\invasion_roster_example.png')
+    wartype, time, location, army, standby, page = decoder.Decode('images\\war_roster_example.png')
 
     print(f'Type: {wartype}')
     print(f'Date: {time[0]}, Time: {time[1]}')
@@ -19,4 +19,5 @@ if __name__ == "__main__":
         print(f'Group {i}: {", ".join(group)}')
         i += 1
 
-    print(f'Standby: {standby}')
+    print(f'Page {page[0]} of {page[1]}')
+    print(f'Standby: {", ".join(standby)}')

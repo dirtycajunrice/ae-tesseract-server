@@ -1,3 +1,4 @@
+import re
 import cv2
 import numpy as np
 import pytesseract as pyt
@@ -21,19 +22,21 @@ class Decoder():
 
         # OpenCV (cv2) variables
         self.method = cv2.TM_SQDIFF_NORMED
-        self.image_threshold = 125
+        self.image_threshold = 85
 
         # Coordinate variables for calculating text anchor points
         self.correct_timedate_xy, self.correct_timetime_xy = (-95, 41), (-95, 79)
         self.correct_loc_xy = (-95, 41)
         self.correct_army_xy, self.x_diff_army, self.y_diff_army, self.y_diff_army_r2 = (74, 165), 298, 57, 414
         self.correct_standby_xy, self.y_diff_standby, self.standby_num_per_page = (94, 78), 49, 19
+        self.correct_page_xy = (85, 1038)
 
         # Text sub-image dimensions
         self.timedate_wh, self.timetime_wh = (390, 30), (390, 30)
         self.location_wh = (350, 34)
         self.army_wh = (144, 30)
         self.standby_wh = (157, 36)
+        self.page_wh = (108, 34)
 
     def read_image(self, raw_image):
         # Read the image using OpenCV and convert to grayscale
@@ -71,8 +74,9 @@ class Decoder():
         anchor_loc = [location_xy[0] + self.correct_loc_xy[0], location_xy[1] + self.correct_loc_xy[1]]
         anchor_army = [armygroups_xy[0] + self.correct_army_xy[0], armygroups_xy[1] + self.correct_army_xy[1]]
         anchor_standby = [standbylist_xy[0] + self.correct_standby_xy[0], standbylist_xy[1] + self.correct_standby_xy[1]]
+        anchor_page = [standbylist_xy[0] + self.correct_page_xy[0], standbylist_xy[1] + self.correct_page_xy[1]]  # Page number uses standbylist_xy to derive anchor point
 
-        return anchor_time, anchor_loc, anchor_army, anchor_standby
+        return anchor_time, anchor_loc, anchor_army, anchor_standby, anchor_page
 
 
     def get_text(self, xy, wh):
@@ -86,6 +90,7 @@ class Decoder():
         # Get text from image using tesseract
         raw_text = pyt.image_to_string(sub_image, lang='eng', config='--psm 6')
         text = raw_text.rstrip('\n\x0c')
+
         return text
 
     def extract_time(self, anchor_coords):
@@ -143,15 +148,23 @@ class Decoder():
 
         return standby
 
+    def extract_page(self, anchor_coords):
+        # Extract page list text
+        page_txt = []
+        page_txt.append(self.get_text(anchor_coords, self.page_wh))
+        page = re.findall(r'\d+', page_txt[0])
+        return page
+
     def Decode(self, raw_image):
         # Create anchor points for text
-        anchor_time, anchor_loc, anchor_army, anchor_standby = self.read_image(raw_image)
+        anchor_time, anchor_loc, anchor_army, anchor_standby, anchor_page = self.read_image(raw_image)
 
         # Extract text from image
         time = self.extract_time(anchor_time)
         location = self.extract_location(anchor_loc)
         army = self.extract_army(anchor_army)
         standby = self.extract_standby(anchor_standby)
+        page = self.extract_page(anchor_page)
 
-        return self.image_wartype, time, location, army, standby
+        return self.image_wartype, time, location, army, standby, page
 
