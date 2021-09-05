@@ -7,6 +7,7 @@ if __name__ == "__main__":
     # webserver.Run()
 
     decoder = Decoder()
+    # wartype, time, location, army, standby = decoder.Decode('images\\invasion_roster_example.png')
     wartype, time, location, army, standby = decoder.Decode('images\\war_roster_example.png')
 
     print(f'Type: {wartype}')
