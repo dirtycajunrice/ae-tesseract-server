@@ -126,7 +126,7 @@ class Decoder():
     def extract_army(self, anchor_coords):
         # Extract army text
         x_range, y_range = self.create_roster_ranges(anchor_coords)
-        roster = []
+        army = []
         group = 0
         player = 0
         for x in x_range:
@@ -134,9 +134,9 @@ class Decoder():
                 text = self.get_text((x, y), self.army_wh)
                 if text is not None:
                     try:
-                        roster[group].append(text)
+                        army[group].append(text)
                     except IndexError:
-                        roster.append([self.get_text((x, y), self.army_wh)])
+                        army.append([self.get_text((x, y), self.army_wh)])
                 # print(f"Adding Player {player} to group {group}")
                 if player == 4:
                     player = 0
@@ -144,7 +144,7 @@ class Decoder():
                     continue
 
                 player += 1
-        return roster
+        return army
 
     def create_roster_ranges(self, anchor_coords):
         # Create grid xy range for all members in the army
