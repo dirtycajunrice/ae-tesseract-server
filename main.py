@@ -3,30 +3,19 @@ from roster_recorder.webserver import Webserver
 
 
 if __name__ == "__main__":
-    webserver = Webserver()
-    webserver.Run()
+    # webserver = Webserver()
+    # webserver.Run()
 
     decoder = Decoder()
-    x_range, y_range = decoder.Decode('images\\roster_example2.png')
-    # extract roster
-    roster = []
-    group = 0
-    player = 0
-    for x in x_range:
-        for y in y_range:
-            try:
-                roster[group].append(decoder.GetName(x, y))
-            except IndexError:
-                roster.append([decoder.GetName(x, y)])
-            # print(f"Adding Player {player} to group {group}")
-            if player == 4:
-                player = 0
-                group += 1
-                continue
+    wartype, time, location, army, standby = decoder.Decode('images\\war_roster_example.png')
 
-            player += 1
+    print(f'Type: {wartype}')
+    print(f'Date: {time[0]}, Time: {time[1]}')
+    print(f'Location: {location[0]}')
 
-    i = 1
-    for group in roster:
+    i = 0
+    for group in army:
         print(f'Group {i}: {", ".join(group)}')
         i += 1
+
+    print(f'Standby: {standby}')

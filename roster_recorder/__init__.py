@@ -1,2 +1,2 @@
-IMG_WIDTH = 140
-IMG_HEIGHT = 45
+INVASION = 'Invasion'
+WAR = 'War'
