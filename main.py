@@ -11,7 +11,7 @@ if __name__ == "__main__":
     wartype, time, location, army, standby, page = decoder.Decode('images\\war_roster_example.png')
 
     print(f'Type: {wartype}')
-    print(f'Date: {time[0]}, Time: {time[1]}')
+    print(f'Date: {time[0]}')
     print(f'Location: {location[0]}')
 
     i = 0

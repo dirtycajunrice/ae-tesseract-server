@@ -2,6 +2,7 @@ import re
 import cv2
 import numpy as np
 import pytesseract as pyt
+from datetime import datetime
 
 from roster_recorder import helpers
 from roster_recorder import INVASION, WAR
@@ -32,7 +33,7 @@ class Decoder():
         self.correct_page_xy = (85, 1038)
 
         # Text sub-image dimensions
-        self.timedate_wh, self.timetime_wh = (390, 30), (390, 30)
+        self.timedate_wh, self.timehour_wh = (390, 30), (390, 30)
         self.location_wh = (350, 34)
         self.army_wh = (144, 30)
         self.standby_wh = (157, 36)
@@ -95,10 +96,26 @@ class Decoder():
 
     def extract_time(self, anchor_coords):
         # Extract date/time text
-        time = []
-        time.append(self.get_text(anchor_coords[0], self.timedate_wh))
-        time.append(self.get_text(anchor_coords[1], self.timetime_wh))
-        return time
+        month_day = (self.get_text(anchor_coords[0], self.timedate_wh)).split(", ")[1]
+        hour = (self.get_text(anchor_coords[1], self.timehour_wh)).split()
+        # timezone = hour[5].replace("(", "").replace(")", "")  # timezone - can't get strptime to read this...
+
+        datestring = " ".join([month_day, " ".join(hour[0].split(":")), hour[1]])
+        return [self.determine_year(datestring)]
+
+    def determine_year(self, datestring):
+        # Year isn't included on war/invasion image
+        # Determining year to avoid wrong year in case war is not same year as images parsed
+        this_year = datetime.today().year
+        last_year = datetime.today().year - 1
+
+        date_this_year = datetime.strptime(" ".join([datestring, str(this_year)]), '%b %d %I %M %p %Y')
+        date_last_year = datetime.strptime(" ".join([datestring, str(last_year)]), '%b %d %I %M %p %Y')
+
+        if datetime.today() < date_this_year:
+            return date_last_year
+        else:
+            return date_this_year
 
     def extract_location(self, anchor_coords):
         # Extract location text
