@@ -9,17 +9,17 @@ from roster_recorder import INVASION, WAR
 
 pyt.pytesseract.tesseract_cmd = 'C:\\Program Files\\Tesseract-OCR\\tesseract.exe'
 
-class Decoder():
+class RosterDecoder():
     def __init__(self):
         self.image = None
         self.image_wartype = None
 
         # Anchor images
-        self.anchor_wartime_img = cv2.cvtColor(cv2.imread('images\\anchor_wartime_gray.png'), cv2.COLOR_BGR2GRAY)
-        self.anchor_invtime_img = cv2.cvtColor(cv2.imread('images\\anchor_invasiontime_gray.png'), cv2.COLOR_BGR2GRAY)
-        self.anchor_location_img = cv2.cvtColor(cv2.imread('images\\anchor_location_gray.png'), cv2.COLOR_BGR2GRAY)
-        self.anchor_armygroups_img = cv2.cvtColor(cv2.imread('images\\anchor_armygroups_gray.png'), cv2.COLOR_BGR2GRAY)
-        self.anchor_standbylist_img = cv2.cvtColor(cv2.imread('images\\anchor_standbylist_gray.png'), cv2.COLOR_BGR2GRAY)
+        self.anchor_wartime_img = cv2.cvtColor(cv2.imread('images\\anchor_wartime_thresh.png'), cv2.COLOR_BGR2GRAY)
+        self.anchor_invtime_img = cv2.cvtColor(cv2.imread('images\\anchor_invasiontime_thresh.png'), cv2.COLOR_BGR2GRAY)
+        self.anchor_location_img = cv2.cvtColor(cv2.imread('images\\anchor_location_thresh.png'), cv2.COLOR_BGR2GRAY)
+        self.anchor_armygroups_img = cv2.cvtColor(cv2.imread('images\\anchor_armygroups_thresh.png'), cv2.COLOR_BGR2GRAY)
+        self.anchor_standbylist_img = cv2.cvtColor(cv2.imread('images\\anchor_standbylist_thresh.png'), cv2.COLOR_BGR2GRAY)
 
         # OpenCV (cv2) variables
         self.method = cv2.TM_SQDIFF_NORMED
