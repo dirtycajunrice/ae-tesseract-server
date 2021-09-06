@@ -20,7 +20,7 @@ if __name__ == "__main__":
         decoder = RankingsDecoder()
         rankings, date = decoder.Decode(img_path)
 
-        print(f'War Date: {date}')
+        print(f'Parse Date: {date}')
         for player in rankings:
             print(f'Rank: {player[0]}, Name: {player[1]}, Score: {player[2]}, Kills: {player[3]}, Deaths: {player[4]}, Assists: {player[5]}, Healing: {player[6]}, Damage: {player[7]}')
 
