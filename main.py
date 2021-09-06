@@ -8,7 +8,8 @@ if __name__ == "__main__":
     # webserver = Webserver()
     # webserver.Run()
 
-    img_path = 'images\\rankings_example_1.png'
+    # img_path = 'images\\rankings_example_1.png'
+    img_path = 'images\\rankings_example_2.png'
     # img_path = 'images\\war_roster_example.png'
     # img_path = 'images\\invasion_roster_example.png'
     typeDetector = ImgTypeDetector()

@@ -73,6 +73,10 @@ class RankingsDecoder():
         # Checking if box captures an entire number, then adjusts the box to be centered on the number
         sub_img_thr = self.image_thr[anch_xy[1]:anch_xy[1] + self.rank_wh[1], anch_xy[0]:anch_xy[0] + self.rank_wh[0]]
         white_px = np.argwhere(sub_img_thr > 0)
+
+        if not white_px.any():
+            return False, None
+
         white_y = white_px[:][:, 0]
         min_y, max_y = min(white_y), max(white_y)
 
@@ -80,7 +84,7 @@ class RankingsDecoder():
             anch_y_adj = max(white_px[:][:, 0]) + round(self.char_h / 2) - round(self.box_h / 2)
             return True, (anch_xy[0], anch_xy[1] + anch_y_adj)
         else:
-            return False, _
+            return False, None
 
     def get_text(self, xy, wh):
         # Create the sub-image for where desired text is located
