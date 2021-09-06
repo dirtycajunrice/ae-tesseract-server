@@ -13,6 +13,7 @@ if __name__ == "__main__":
     # img_path = 'images\\invasion_roster_example.png'
     typeDetector = ImgTypeDetector()
     img_type = typeDetector.Detect(img_path)
+    # TODO check for "[Player] has left" image on screen and do something about it
 
     if img_type == RANKINGS:
         decoder = RankingsDecoder()

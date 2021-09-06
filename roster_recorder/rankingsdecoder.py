@@ -80,7 +80,7 @@ class RankingsDecoder():
             anch_y_adj = max(white_px[:][:, 0]) + round(self.char_h / 2) - round(self.box_h / 2)
             return True, (anch_xy[0], anch_xy[1] + anch_y_adj)
         else:
-            return False, (None, None)
+            return False, _
 
     def get_text(self, xy, wh):
         # Create the sub-image for where desired text is located
