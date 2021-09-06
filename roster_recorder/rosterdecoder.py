@@ -22,7 +22,8 @@ class RosterDecoder():
         self.anchor_standbylist_img = cv2.cvtColor(cv2.imread('images\\anchor_standbylist_thresh.png'), cv2.COLOR_BGR2GRAY)
 
         # OpenCV (cv2) variables
-        self.method = cv2.TM_SQDIFF_NORMED
+        self.match_method = cv2.TM_SQDIFF_NORMED
+        self.threshold_method = cv2.THRESH_TOZERO
         self.image_threshold = 85
 
         # Coordinate variables for calculating text anchor points
@@ -48,11 +49,11 @@ class RosterDecoder():
 
     def anchor_match(self):
         # Match anchor images and create scores
-        wartime_match = cv2.matchTemplate(self.anchor_wartime_img, self.image, self.method)
-        invtime_match = cv2.matchTemplate(self.anchor_invtime_img, self.image, self.method)
-        location_match = cv2.matchTemplate(self.anchor_location_img, self.image, self.method)
-        armygroups_match = cv2.matchTemplate(self.anchor_armygroups_img, self.image, self.method)
-        standbylist_match = cv2.matchTemplate(self.anchor_standbylist_img, self.image, self.method)
+        wartime_match = cv2.matchTemplate(self.anchor_wartime_img, self.image, self.match_method)
+        invtime_match = cv2.matchTemplate(self.anchor_invtime_img, self.image, self.match_method)
+        location_match = cv2.matchTemplate(self.anchor_location_img, self.image, self.match_method)
+        armygroups_match = cv2.matchTemplate(self.anchor_armygroups_img, self.image, self.match_method)
+        standbylist_match = cv2.matchTemplate(self.anchor_standbylist_img, self.image, self.match_method)
 
         # Get anchor xy from template match. Note: using SQDIFF method, so min score location is used
         wartime_min, _, wartime_xy, _ = cv2.minMaxLoc(wartime_match)
@@ -83,8 +84,9 @@ class RosterDecoder():
     def get_text(self, xy, wh):
         # Create the sub-image for where desired text is located
         sub_image = self.image[xy[1]:xy[1] + wh[1], xy[0]:xy[0] + wh[0]]  # Note, dimensions are (y, x) on cv images
-        _, sub_image_thresh = cv2.threshold(sub_image, self.image_threshold, 255, cv2.THRESH_TOZERO)
+        _, sub_image_thresh = cv2.threshold(sub_image, self.image_threshold, 255, self.threshold_method)
 
+        # If entire image is black, return none
         if not np.any(sub_image_thresh[:, :] > 0):
             return None
 

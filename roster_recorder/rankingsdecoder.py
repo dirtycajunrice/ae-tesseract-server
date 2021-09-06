@@ -1,4 +1,3 @@
-import re
 import cv2
 import numpy as np
 import pytesseract as pyt
@@ -17,9 +16,9 @@ class RankingsDecoder():
         self.anchor_ALL_img = cv2.cvtColor(cv2.imread('images\\anchor_ALL_thresh.png'), cv2.COLOR_BGR2GRAY)
 
         # OpenCV (cv2) variables
-        self.method = cv2.TM_SQDIFF_NORMED
+        self.match_method = cv2.TM_SQDIFF_NORMED
         self.threshold_method = cv2.THRESH_TOZERO
-        self.threshold = 115
+        self.image_threshold = 115
 
         # Coordinate variables for calculating text anchor points
         self.correct_rank_xy, self.num_per_page = (-8, 230), 9
@@ -42,14 +41,14 @@ class RankingsDecoder():
     def read_image(self, raw_image):
         # Read the image using OpenCV and convert to grayscale
         self.image = cv2.cvtColor(cv2.imread(raw_image), cv2.COLOR_BGR2GRAY)
-        _, self.image_thr = cv2.threshold(self.image, self.threshold, 255, self.threshold_method)
+        _, self.image_thr = cv2.threshold(self.image, self.image_threshold, 255, self.threshold_method)
 
         # Find the anchor sub-image locations within the given image (img)
         return self.anchor_match()
 
     def anchor_match(self):
         # Match anchor images and create scores
-        ALL_match = cv2.matchTemplate(self.anchor_ALL_img, self.image_thr, self.method)
+        ALL_match = cv2.matchTemplate(self.anchor_ALL_img, self.image_thr, self.match_method)
 
         # Get anchor xy from template match. Note: using SQDIFF method, so min score location is used
         _, _, ALL_xy, _ = cv2.minMaxLoc(ALL_match)
@@ -60,6 +59,7 @@ class RankingsDecoder():
         return anchor_rank
 
     def find_rank(self, anch_xy):
+        # Find initial rank box anchor
         attempts = (0, 1, 2)  # If we don't find the scores in 2 moves then something is broken
 
         for i in attempts:
@@ -70,6 +70,7 @@ class RankingsDecoder():
         raise ValueError('Rank text was never found to set anchor point.')
 
     def check_rank_box(self, anch_xy):
+        # Checking if box captures an entire number, then adjusts the box to be centered on the number
         sub_img_thr = self.image_thr[anch_xy[1]:anch_xy[1] + self.rank_wh[1], anch_xy[0]:anch_xy[0] + self.rank_wh[0]]
         white_px = np.argwhere(sub_img_thr > 0)
         white_y = white_px[:][:, 0]
