@@ -88,9 +88,9 @@ class RankingsDecoder():
 
     def get_text(self, xy, wh):
         # Create the sub-image for where desired text is located
-        sub_img = self.image[xy[1]:xy[1] + wh[1], xy[0]:xy[0] + wh[0]]  # Note, dimensions are (y, x) on cv images
-        sub_img_thr = self.image_thr[xy[1]:xy[1] + wh[1], xy[0]:xy[0] + wh[0]]
-        helpers.drawDebugRectangle(self.image, xy, wh)
+        _, sub_img_thr = cv2.threshold(self.image_thr[xy[1]:xy[1] + wh[1], xy[0]:xy[0] + wh[0]], 115, 255, cv2.THRESH_BINARY_INV)
+        # sub_img_thr = cv2.resize(sub_img_thr, None, fx=2, fy=2, interpolation = cv2.INTER_AREA)
+        # helpers.showImage(sub_img_thr)
 
         if not np.any(sub_img_thr[:, :] > 0):
             return None
