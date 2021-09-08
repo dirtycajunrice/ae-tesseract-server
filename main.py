@@ -8,10 +8,15 @@ if __name__ == "__main__":
     # webserver = Webserver()
     # webserver.Run()
 
+    # Rankings images
     # img_path = 'images\\rankings_example_1.png'
     # img_path = 'images\\rankings_example_2.png'
+    img_path = 'images\\rankings_example_playerleft_1.png'
+    # img_path = 'images\\rankings_example_playerleft_2.png'
+
+    # War/Invasion images
     # img_path = 'images\\war_roster_example.png'
-    img_path = 'images\\invasion_roster_example.png'
+    # img_path = 'images\\invasion_roster_example.png'
     typeDetector = ImgTypeDetector()
     img_type = typeDetector.Detect(img_path)
     # TODO check for "[Player] has left" image on screen and do something about it

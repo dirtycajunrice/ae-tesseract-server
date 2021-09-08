@@ -14,6 +14,14 @@ class RankingsDecoder():
 
         # Anchor images
         self.anchor_ALL_img = cv2.cvtColor(cv2.imread('images\\anchor_ALL_thresh.png'), cv2.COLOR_BGR2GRAY)
+        self.anchor_LTG_img = cv2.cvtColor(cv2.imread('images\\anchor_leftthegroup_thresh.png'), cv2.COLOR_BGR2GRAY)
+
+        # "Interrupting" anchor LeftTheGroup variables
+        self.LTG_xy = None
+        self.LTG_exists = None
+        self.LTG_h = 65
+        self.LTG_y_adj = -20
+        self.LTG_score_threshold = .2
 
         # OpenCV (cv2) variables
         self.match_method = cv2.TM_SQDIFF_NORMED
@@ -42,6 +50,9 @@ class RankingsDecoder():
         # Read the image using OpenCV and convert to grayscale
         self.image = cv2.cvtColor(cv2.imread(raw_image), cv2.COLOR_BGR2GRAY)
         _, self.image_thr = cv2.threshold(self.image, self.image_threshold, 255, self.threshold_method)
+
+        # Check for LTG image
+        self.LTG_exists, self.LTG_xy = self.check_leftthegroup()
 
         # Find the anchor sub-image locations within the given image (img)
         return self.anchor_match()
@@ -85,6 +96,15 @@ class RankingsDecoder():
             return True, (anch_xy[0], anch_xy[1] + anch_y_adj)
         else:
             return False, None
+
+    def check_leftthegroup(self):
+        # Match anchor images and create scores
+        LTG_match = cv2.matchTemplate(self.anchor_LTG_img, self.image_thr, self.match_method)
+
+        # Get anchor xy from template match. Note: using SQDIFF method, so min score location is used
+        LTG_score, _, LTG_xy, _ = cv2.minMaxLoc(LTG_match)
+
+        return LTG_score < self.LTG_score_threshold, LTG_xy
 
     def get_text(self, xy, wh):
         # Create the sub-image for where desired text is located
@@ -135,6 +155,14 @@ class RankingsDecoder():
         a = anchor_coords
         x = [x + a[0] for x in self.x_diff_range]
         y = np.arange(0, self.num_per_page) * self.box_h + a[1]
+
+        if self.LTG_exists:
+            # Remove rows that would be interrupted by the "left the group" image
+            top_y = self.LTG_xy[1] + self.LTG_y_adj
+            bot_y = top_y + self.LTG_h
+
+            y = np.delete(y, np.where([top_y < j < bot_y or top_y > j + self.text_h > bot_y for j in y]))
+
         return x, y
 
     def Decode(self, raw_image):
