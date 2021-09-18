@@ -52,3 +52,24 @@ def roster_json(wartype, time, location, army, standby, page):
         json.dump(data, outfile)
 
     return data
+
+def print_war(war_type, role, faction, guild, time, location, army, standby, page):
+    print(f'Type: {war_type}')
+    print(f'Role: {role}')
+    print(f'Guild: {guild}')
+    print(f'Faction: {faction}')
+    print(f'Date: {time}')
+    print(f'Location: {location}')
+
+    for player in army:
+        print(f'{player}')
+
+    # print(f'Page {page[0]} of {page[1]}')
+    print(f'Standby: {", ".join(standby)}')
+
+def print_rankings(rankings, date):
+    print(f'Parse Date: {date}')
+    for player in rankings:
+        print(
+            f'Rank: {player[0]}, Name: {player[1]}, Score: {player[2]}, Kills: {player[3]}, Deaths: {player[4]}, '
+            f'Assists: {player[5]}, Healing: {player[6]}, Damage: {player[7]}')
