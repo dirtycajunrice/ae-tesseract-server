@@ -23,44 +23,44 @@ if __name__ == "__main__":
     # img_path = 'images\\war_roster_example_bw4.jpg'
     #  img_path = 'images\\invasion_roster_example.png'
 
-    def poo(img_path):
-        typeDetector = ImgTypeDetector()
-        img_type = typeDetector.Detect(img_path)
 
-        if img_type == RANKINGS:
-            decoder = RankingsDecoder()
-            rankings, date = decoder.Decode(img_path)
+    images = [
+                {'img_path': 'images\\war_roster_example_bw1.jpg', 'type': ROSTER},
+                {'img_path': 'images\\war_roster_example_bw2.jpg', 'type': ROSTER},
+                {'img_path': 'images\\rankings_example_1.png', 'type': RANKINGS},
+                {'img_path': 'images\\rankings_example_2.png', 'type': RANKINGS}
+             ]
 
-            helpers.print_rankings(rankings, date)
+    db = Db()
+    for img in images:
 
-        elif img_type == ROSTER:
+        # typeDetector = ImgTypeDetector()
+        # img_type = typeDetector.Detect(img_path)
+
+        if img['type'] == ROSTER:
             decoder = RosterDecoder()
-            war_type, role, faction, guild, time, location, army, standby, page = decoder.Decode(img_path)
+            war_type, role, faction, guild, time, location, army, standby, page = decoder.Decode(img['img_path'])
 
             # helpers.print_war(war_type, role, faction, guild, time, location, army, standby, page)
 
             # Update database
-            db = Db()
             if db.WarExists(war_type, time, location):
                 db.UpdateWar(army=army, standby=standby)
             else:
                 db.UpdateWar(war_type, role, faction, guild, time, location, army, standby)
 
+        elif img['type'] == RANKINGS:
+            decoder = RankingsDecoder()
+            rankings, date = decoder.Decode(img['img_path'])
+
+            # helpers.print_rankings(rankings, date)
+
+            # Update database
+            db.UpdatePerformance(rankings)
+
         else:
             # TODO: Image not recognized
             pass
-
-
-    images = ['images\\invasion_roster_example.png',
-              'images\\war_roster_example.png',
-              'images\\war_roster_example_bw1.jpg', 'images\\war_roster_example_bw2.jpg',
-              'images\\war_roster_example_bw3.jpg', 'images\\war_roster_example_bw4.jpg',
-              'images\\invasion_roster_example.png'
-              ]
-    for img in images:
-        poo(img)
-
-
 
 
 

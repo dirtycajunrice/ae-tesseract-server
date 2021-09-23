@@ -171,5 +171,6 @@ class RankingsDecoder():
 
         # Extract text from image
         rankings = self.extract_rankings(anchor_rank)
+        # TODO: convert strings that are numbers to int
 
         return rankings, str(datetime.now())
