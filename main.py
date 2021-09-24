@@ -3,7 +3,7 @@ from roster_recorder.rankingsdecoder import RankingsDecoder
 from roster_recorder.imgtypedetector import ImgTypeDetector
 from roster_recorder.db import Db
 from roster_recorder.webserver import Webserver
-from roster_recorder import helpers, ROSTER, RANKINGS
+from roster_recorder import helpers, ROSTER, RANKINGS, STANDBY
 
 if __name__ == "__main__":
     # webserver = Webserver()
@@ -26,9 +26,9 @@ if __name__ == "__main__":
 
     images = [
                 {'img_path': 'images\\war_roster_example_bw1.jpg', 'type': ROSTER},
-                {'img_path': 'images\\war_roster_example_bw2.jpg', 'type': ROSTER},
-                {'img_path': 'images\\rankings_example_1.png', 'type': RANKINGS},
-                {'img_path': 'images\\rankings_example_2.png', 'type': RANKINGS}
+                {'img_path': 'images\\war_roster_example_bw2.jpg', 'type': STANDBY},
+                {'img_path': 'images\\rankings_example_bw1.png', 'type': RANKINGS},
+                {'img_path': 'images\\rankings_example_bw2.png', 'type': RANKINGS}
              ]
 
     db = Db()
@@ -39,29 +39,25 @@ if __name__ == "__main__":
 
         if img['type'] == ROSTER:
             decoder = RosterDecoder()
-            war_type, role, faction, guild, time, location, army, standby, page = decoder.Decode(img['img_path'])
+            war_type, role, faction, guild, time, location, army, standby, page = decoder.Decode(img['img_path'],
+                                                                                                 img['type'])
 
             # helpers.print_war(war_type, role, faction, guild, time, location, army, standby, page)
 
             # Update database
-            if db.WarExists(war_type, time, location):
-                db.UpdateWar(army=army, standby=standby)
-            else:
-                db.UpdateWar(war_type, role, faction, guild, time, location, army, standby)
+            db.UpdateWar(war_type, role, faction, guild, time, location, army, standby)
+
+        elif img['type'] == STANDBY:
+            decoder = RosterDecoder()
+            standby = decoder.Decode(img['img_path'], img['type'])
+            db.UpdateStandby(standby)
 
         elif img['type'] == RANKINGS:
             decoder = RankingsDecoder()
-            rankings, date = decoder.Decode(img['img_path'])
+            rankings, company_results = decoder.Decode(img['img_path'])
 
             # helpers.print_rankings(rankings, date)
 
             # Update database
-            db.UpdatePerformance(rankings)
-
-        else:
-            # TODO: Image not recognized
-            pass
-
-
-
+            db.UpdatePerformance(rankings, company_results)
 

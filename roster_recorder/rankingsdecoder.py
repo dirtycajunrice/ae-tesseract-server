@@ -15,6 +15,15 @@ class RankingsDecoder():
         # Anchor images
         self.anchor_ALL_img = cv2.cvtColor(cv2.imread('images\\anchor_ALL_thresh.png'), cv2.COLOR_BGR2GRAY)
         self.anchor_LTG_img = cv2.cvtColor(cv2.imread('images\\anchor_leftthegroup_thresh.png'), cv2.COLOR_BGR2GRAY)
+        self.anchor_companyname_img = cv2.cvtColor(cv2.imread('images\\anchor_companyname_thresh.png'), cv2.COLOR_BGR2GRAY)
+
+        # Company/outcome/faction coordinates and variables
+        self.correct_companyname_xy = (-78, 28)
+        self.companyname_wh = (365, 45)
+        self.correct_outcome_xy = (-78, -124)
+        self.outcome_wh = (350, 60)
+        self.correct_faction_xy = (-78, -219)
+        self.faction_wh = (350, 60)
 
         # "Interrupting" anchor LeftTheGroup variables
         self.LTG_xy = None
@@ -22,6 +31,7 @@ class RankingsDecoder():
         self.LTG_h = 65
         self.LTG_y_adj = -20
         self.LTG_score_threshold = .2
+        self.companyname_score_threshold = .32
 
         # OpenCV (cv2) variables
         self.match_method = cv2.TM_SQDIFF_NORMED
@@ -60,14 +70,18 @@ class RankingsDecoder():
     def anchor_match(self):
         # Match anchor images and create scores
         ALL_match = cv2.matchTemplate(self.anchor_ALL_img, self.image_thr, self.match_method)
+        companyname_match = cv2.matchTemplate(self.anchor_companyname_img, self.image_thr, self.match_method)
 
         # Get anchor xy from template match. Note: using SQDIFF method, so min score location is used
         _, _, ALL_xy, _ = cv2.minMaxLoc(ALL_match)
+        # Expect 2 results for company name
+        anchor_companyname = np.where(companyname_match < self.companyname_score_threshold)
+        anchor_companyname = zip(*anchor_companyname[::-1])
 
-        # Calculate the anchor locations for the text we want
+        # Calculate the anchor locations for the rank text we want
         anchor_rank = [ALL_xy[0] + self.correct_rank_xy[0], ALL_xy[1] + self.correct_rank_xy[1]]
 
-        return anchor_rank
+        return anchor_rank, anchor_companyname
 
     def find_rank(self, anch_xy):
         # Find initial rank box anchor
@@ -111,6 +125,7 @@ class RankingsDecoder():
         sub_image = self.image[xy[1]:xy[1] + wh[1], xy[0]:xy[0] + wh[0]]  # Note, dimensions are (y, x) on cv images
         _, sub_img_thr = cv2.threshold(sub_image, 115, 255, cv2.THRESH_BINARY_INV)
 
+        # helpers.drawDebugRectangle(self.image, xy, wh)
         if not np.any(sub_img_thr[:, :] > 0):
             return None
 
@@ -137,6 +152,12 @@ class RankingsDecoder():
                         break
 
                 text = self.get_text((x, y), self.stats_wh[stat])
+                if stat != 1:
+                    if not text.isdigit():
+                        text = None
+                    else:
+                        text = int(text)
+
                 try:
                     rankings[player].append(text)
                 except IndexError:
@@ -165,12 +186,29 @@ class RankingsDecoder():
 
         return x, y
 
+    def extract_company_results(self, anchor_companyname):
+        company_results = []
+        for anchor in anchor_companyname:
+            company = self.get_text((anchor[0] + self.correct_companyname_xy[0],
+                                     anchor[1] + self.correct_companyname_xy[1]),
+                                    self.companyname_wh)
+            outcome = self.get_text((anchor[0] + self.correct_outcome_xy[0],
+                                     anchor[1] + self.correct_outcome_xy[1]),
+                                    self.outcome_wh)
+            faction = self.get_text((anchor[0] + self.correct_faction_xy[0],
+                                     anchor[1] + self.correct_faction_xy[1]),
+                                    self.faction_wh)
+            company_results.append({'name': company, 'outcome': outcome, 'faction': faction})
+
+        return company_results
+
     def Decode(self, raw_image):
         # Create anchor points for text
-        anchor_rank = self.read_image(raw_image)
+        anchor_rank, anchor_companyname = self.read_image(raw_image)
 
         # Extract text from image
         rankings = self.extract_rankings(anchor_rank)
-        # TODO: convert strings that are numbers to int
+        company_results = self.extract_company_results(anchor_companyname)
+        # helpers.showImage(self.image)
 
-        return rankings, str(datetime.now())
+        return rankings, company_results

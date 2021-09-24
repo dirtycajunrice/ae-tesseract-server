@@ -5,7 +5,7 @@ import pytesseract as pyt
 from datetime import datetime
 
 from roster_recorder import helpers
-from roster_recorder import INVASION, WAR, DEFENDER
+from roster_recorder import INVASION, WAR, DEFENDER, ROSTER, RANKINGS, STANDBY
 
 pyt.pytesseract.tesseract_cmd = 'C:\\Program Files\\Tesseract-OCR\\tesseract.exe'
 
@@ -55,73 +55,85 @@ class RosterDecoder():
         self.empty_x_adj = -40
         self.empty_score_threshold = .12
 
-    def Decode(self, raw_image):
-        # Create anchor points for text
-        anchor_role, anchor_faction, anchor_guild, anchor_time, \
-        anchor_loc, anchor_army, anchor_standby, anchor_page = self.read_image(raw_image)
+    def Decode(self, raw_image, img_type: str):
+        if img_type == ROSTER:
+            # Create anchor points for text
+            anchor_role, anchor_faction, anchor_guild, anchor_time, \
+            anchor_loc, anchor_army, anchor_standby, anchor_page = self.read_image(raw_image, img_type)
 
-        # Extract text from image
-        role, faction, guild = None, None, None
-        if self.image_wartype == WAR:
-            role = self.extract_role(anchor_role)
-            faction = self.extract_faction(anchor_faction)
-        elif self.image_wartype == INVASION:
-            role = DEFENDER
-        guild = self.extract_guild(anchor_guild)
-        time = self.extract_time(anchor_time)
-        location = self.extract_location(anchor_loc)
-        army = self.extract_army(anchor_army)
-        standby = self.extract_standby(anchor_standby)
-        # page = self.extract_page(anchor_page) # Skip page for now - we don't need it and it's having trouble
-        page = None
-        # helpers.showImage(self.image)
+            # Extract text from image
+            role, faction, guild = None, None, None
+            if self.image_wartype == WAR:
+                role = self.extract_role(anchor_role)
+                faction = self.extract_faction(anchor_faction)
+            elif self.image_wartype == INVASION:
+                role = DEFENDER
+            guild = self.extract_guild(anchor_guild)
+            time = self.extract_time(anchor_time)
+            location = self.extract_location(anchor_loc)
+            army = self.extract_army(anchor_army)
+            standby = self.extract_standby(anchor_standby)
+            # page = self.extract_page(anchor_page) # Skip page for now - we don't need it and it's having trouble
+            page = None
+            # helpers.showImage(self.image)
 
-        return self.image_wartype, role, faction, guild, time, location, army, standby, page
+            return self.image_wartype, role, faction, guild, time, location, army, standby, page
 
-    def read_image(self, raw_image):
+        elif img_type == STANDBY:
+            anchor_standby = self.read_image(raw_image, img_type)
+            return self.extract_standby(anchor_standby)
+
+    def read_image(self, raw_image, img_type):
         # Read the image using OpenCV and convert to grayscale
         self.image = cv2.cvtColor(cv2.imread(raw_image), cv2.COLOR_BGR2GRAY)
         _, self.image_thr = cv2.threshold(self.image, self.image_threshold, 255, self.threshold_method)
 
         # Find the anchor sub-image locations within the given image (img)
-        return self.anchor_match()
+        return self.anchor_match(img_type)
 
-    def anchor_match(self):
-        # Match anchor images and create scores
-        wartime_match = cv2.matchTemplate(self.anchor_wartime_img, self.image, self.match_method)
-        invtime_match = cv2.matchTemplate(self.anchor_invtime_img, self.image, self.match_method)
-        location_match = cv2.matchTemplate(self.anchor_location_img, self.image, self.match_method)
-        armygroups_match = cv2.matchTemplate(self.anchor_armygroups_img, self.image, self.match_method)
-        standbylist_match = cv2.matchTemplate(self.anchor_standbylist_img, self.image, self.match_method)
+    def anchor_match(self, img_type):
+        if img_type == ROSTER:
+            # Match anchor images and create scores
+            wartime_match = cv2.matchTemplate(self.anchor_wartime_img, self.image, self.match_method)
+            invtime_match = cv2.matchTemplate(self.anchor_invtime_img, self.image, self.match_method)
+            location_match = cv2.matchTemplate(self.anchor_location_img, self.image, self.match_method)
+            armygroups_match = cv2.matchTemplate(self.anchor_armygroups_img, self.image, self.match_method)
+            standbylist_match = cv2.matchTemplate(self.anchor_standbylist_img, self.image, self.match_method)
 
-        # Get anchor xy from template match. Note: using SQDIFF method, so min score location is used
-        wartime_min, _, wartime_xy, _ = cv2.minMaxLoc(wartime_match)
-        invtime_min, _, invtime_xy, _ = cv2.minMaxLoc(invtime_match)
-        _, _, location_xy, _ = cv2.minMaxLoc(location_match)
-        _, _, armygroups_xy, _ = cv2.minMaxLoc(armygroups_match)
-        _, _, standbylist_xy, _ = cv2.minMaxLoc(standbylist_match)
+            # Get anchor xy from template match. Note: using SQDIFF method, so min score location is used
+            wartime_min, _, wartime_xy, _ = cv2.minMaxLoc(wartime_match)
+            invtime_min, _, invtime_xy, _ = cv2.minMaxLoc(invtime_match)
+            _, _, location_xy, _ = cv2.minMaxLoc(location_match)
+            _, _, armygroups_xy, _ = cv2.minMaxLoc(armygroups_match)
+            _, _, standbylist_xy, _ = cv2.minMaxLoc(standbylist_match)
 
-        # Identify if war or invasion screenshot
-        if wartime_min < invtime_min:
-            time_xy = wartime_xy
-            self.image_wartype = WAR
-        else:
-            time_xy = invtime_xy
-            self.image_wartype = INVASION
+            # Identify if war or invasion screenshot
+            if wartime_min < invtime_min:
+                time_xy = wartime_xy
+                self.image_wartype = WAR
+            else:
+                time_xy = invtime_xy
+                self.image_wartype = INVASION
 
-        # Calculate the anchor locations for the text we want
-        anchor_role = [time_xy[0] + self.correct_role_xy[0], time_xy[1] + self.correct_role_xy[1]]
-        anchor_faction = [time_xy[0] + self.correct_faction_xy[0], time_xy[1] + self.correct_faction_xy[1]]
-        anchor_guild = [time_xy[0] + self.correct_guild_xy[0], time_xy[1] + self.correct_guild_xy[1]]
-        anchor_time = [(time_xy[0] + self.correct_timedate_xy[0], time_xy[1] + self.correct_timedate_xy[1]),
-                       (time_xy[0] + self.correct_timetime_xy[0], time_xy[1] + self.correct_timetime_xy[1])]
-        anchor_loc = [location_xy[0] + self.correct_loc_xy[0], location_xy[1] + self.correct_loc_xy[1]]
-        anchor_army = [armygroups_xy[0] + self.correct_army_xy[0], armygroups_xy[1] + self.correct_army_xy[1]]
-        anchor_standby = [standbylist_xy[0] + self.correct_standby_xy[0], standbylist_xy[1] + self.correct_standby_xy[1]]
-        anchor_page = [standbylist_xy[0] + self.correct_page_xy[0], standbylist_xy[1] + self.correct_page_xy[1]]
+            # Calculate the anchor locations for the text we want
+            anchor_role = [time_xy[0] + self.correct_role_xy[0], time_xy[1] + self.correct_role_xy[1]]
+            anchor_faction = [time_xy[0] + self.correct_faction_xy[0], time_xy[1] + self.correct_faction_xy[1]]
+            anchor_guild = [time_xy[0] + self.correct_guild_xy[0], time_xy[1] + self.correct_guild_xy[1]]
+            anchor_time = [(time_xy[0] + self.correct_timedate_xy[0], time_xy[1] + self.correct_timedate_xy[1]),
+                           (time_xy[0] + self.correct_timetime_xy[0], time_xy[1] + self.correct_timetime_xy[1])]
+            anchor_loc = [location_xy[0] + self.correct_loc_xy[0], location_xy[1] + self.correct_loc_xy[1]]
+            anchor_army = [armygroups_xy[0] + self.correct_army_xy[0], armygroups_xy[1] + self.correct_army_xy[1]]
+            anchor_standby = [standbylist_xy[0] + self.correct_standby_xy[0], standbylist_xy[1] + self.correct_standby_xy[1]]
+            anchor_page = [standbylist_xy[0] + self.correct_page_xy[0], standbylist_xy[1] + self.correct_page_xy[1]]
 
-        return anchor_role, anchor_faction, anchor_guild, anchor_time, \
-               anchor_loc, anchor_army, anchor_standby, anchor_page
+            return anchor_role, anchor_faction, anchor_guild, anchor_time, \
+                   anchor_loc, anchor_army, anchor_standby, anchor_page
+
+        elif img_type == STANDBY:
+            standbylist_match = cv2.matchTemplate(self.anchor_standbylist_img, self.image, self.match_method)
+            _, _, standbylist_xy, _ = cv2.minMaxLoc(standbylist_match)
+            return [standbylist_xy[0] + self.correct_standby_xy[0], standbylist_xy[1] + self.correct_standby_xy[1]]
+
 
     def extract_role(self, anchor_coords):
         # Extract role text
