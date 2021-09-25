@@ -151,7 +151,7 @@ class Db():
             player_id, _ = self.get_player_id(player[1])
             if not self.ae.wars.find_one({'_id': self.war_id, 'performance.playerId': player_id}):
                 performance.append(
-                    {'playerId': player_id, 'name': player[1], 'score': player[2], 'kills': player[3],
+                    {'playerId': player_id, 'name': player[1], 'rank': player[0], 'score': player[2], 'kills': player[3],
                      'deaths': player[4], 'assists': player[5], 'healing': player[6], 'damage': player[7]}
                 )
 
