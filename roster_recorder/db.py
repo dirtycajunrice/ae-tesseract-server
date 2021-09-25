@@ -136,7 +136,7 @@ class Db():
         company_id = self.ae.companies.find_one({'name': name})
         if company_id is None:
             faction_id = self.get_faction_id(faction)
-            self.ae.companies.insert_one({'name': name, 'faction': faction, 'factionId': faction_id})
+            self.ae.companies.insert_one({'name': name, 'faction': faction, 'factionId': faction_id, 'active': 1})
             company_id = self.ae.companies.find_one({'name': name})
 
         return company_id['_id']
